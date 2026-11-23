@@ -44,11 +44,13 @@ export default function Page() {
   const [history, setHistory] = useState<SavedInvoice[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Tous");
-
-  const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
+const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
+  const [nowDate, setNowDate] = useState<Date | null>(null);
 
   useEffect(() => {
-    setTrialEndsAt(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000));
+    const current = new Date();
+    setNowDate(current);
+    setTrialEndsAt(new Date(current.getTime() + 5 * 24 * 60 * 60 * 1000));
   }, []);
 
   const userSubscription = {
@@ -56,7 +58,10 @@ export default function Page() {
     subscriptionStatus: "trial" as const,
   };
 
-  const { canAccess, isTrial, daysLeft } = checkUserAccess(userSubscription);
+  const { canAccess, isTrial, daysLeft } = checkUserAccess(
+    userSubscription,
+    nowDate ?? undefined
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem("factures_express_history");

@@ -3,10 +3,13 @@ export interface UserSubscription {
   subscriptionStatus: 'trial' | 'active' | 'expired';
 }
 
-export function checkUserAccess(user: UserSubscription): { canAccess: boolean; isTrial: boolean; daysLeft: number } {
-  const now = new Date();
+export function checkUserAccess(
+  user: UserSubscription,
+  nowDate?: Date
+): { canAccess: boolean; isTrial: boolean; daysLeft: number } {
+  const now = nowDate ?? new Date(2026, 0, 1);
   const trialEnd = new Date(user.trialEndsAt);
-  
+
   if (user.subscriptionStatus === 'active') {
     return { canAccess: true, isTrial: false, daysLeft: 0 };
   }
