@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import {
   checkUserAccess,
   getOrCreateSubscription,
+  setSubscriptionStatus,
   type UserSubscription,
 } from "@/lib/subscription";
 
@@ -54,6 +55,7 @@ export default function Page() {
     subscriptionStatus: "trial",
   });
   const [nowDate, setNowDate] = useState<Date | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     const current = new Date();
@@ -334,7 +336,7 @@ export default function Page() {
               ⚠️ Période d&apos;essai gratuit en cours : Il vous reste <strong>{daysLeft} jours</strong> pour tester Facture Express.
             </p>
             <button
-              onClick={() => alert("Redirection vers la page de mise à niveau Pro...")}
+              onClick={() => setShowUpgradeModal(true)}
               className="bg-amber-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-amber-700 transition"
             >
               Passer à la version Pro
@@ -690,10 +692,21 @@ export default function Page() {
           </div>
         )}
 
-        {!canAccess && (
+{(!canAccess || showUpgradeModal) && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Votre essai gratuit est terminé</h2>
+            <div className="bg-white p-8 rounded-2xl max-w-md w-full text-center shadow-2xl relative">
+              {canAccess && (
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold text-lg"
+                >
+                  ✕
+                </button>
+              )}
+
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {canAccess ? "Passer à Facture Express Pro" : "Votre essai gratuit est terminé"}
+              </h2>
               <p className="text-gray-600 mb-6 text-sm">
                 Pour continuer à générer des factures et gérer votre activité sans aucune limite, activez votre abonnement mensuel dès maintenant.
               </p>
@@ -704,7 +717,12 @@ export default function Page() {
               </div>
 
               <button
-                onClick={() => alert("Redirection vers le paiement Wave / Orange Money...")}
+                onClick={() => {
+                  const updated = setSubscriptionStatus("active");
+                  setSubscription(updated);
+                  setShowUpgradeModal(false);
+                  alert("Abonnement Pro activé ! Merci.");
+                }}
                 className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-md"
               >
                 Payer via Wave / Orange Money
