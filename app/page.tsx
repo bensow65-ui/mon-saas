@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { checkUserAccess } from "@/lib/subscription";
 
 interface Item {
   description: string;
@@ -43,6 +44,13 @@ export default function Page() {
   const [history, setHistory] = useState<SavedInvoice[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Tous");
+
+  const userSubscription = {
+    trialEndsAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    subscriptionStatus: "trial" as const,
+  };
+
+  const { canAccess, isTrial, daysLeft } = checkUserAccess(userSubscription);
 
   useEffect(() => {
     const saved = localStorage.getItem("factures_express_history");
@@ -177,7 +185,6 @@ export default function Page() {
     localStorage.removeItem("factures_express_history");
   };
 
-  // Export de l'historique complet en CSV / Excel
   const exportToCSV = () => {
     if (history.length === 0) return;
     
@@ -308,6 +315,21 @@ export default function Page() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         
+        {/* BANNIÈRE D'ESSAI GRATUIT */}
+        {isTrial && (
+          <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <p className="text-sm">
+              ⚠️ Période d&apos;essai gratuit en cours : Il vous reste <strong>{daysLeft} jours</strong> pour tester Facture Express.
+            </p>
+            <button 
+              onClick={() => alert("Redirection vers la page de mise à niveau Pro...")}
+              className="bg-amber-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-amber-700 transition"
+            >
+              Passer à la version Pro
+            </button>
+          </div>
+        )}
+
         {/* Tableau de bord financier */}
         {history.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -315,7 +337,7 @@ export default function Page() {
               onClick={() => setStatusFilter("Tous")}
               className={`bg-white p-4 rounded-md shadow-sm border-l-4 border-blue-500 cursor-pointer hover:bg-blue-50 transition ${statusFilter === "Tous" ? "ring-2 ring-blue-400" : ""}`}
             >
-              <p className="text-xs text-gray-500 font-medium">Chiffre d'affaires (Payé)</p>
+              <p className="text-xs text-gray-500 font-medium">Chiffre d&apos;affaires (Payé)</p>
               <p className="text-lg font-bold text-gray-800">{formatAmount(totalPaid)} FCFA</p>
             </div>
 
@@ -345,7 +367,7 @@ export default function Page() {
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Logo de l'entreprise
+                Logo de l&apos;entreprise
               </label>
               <div className="flex items-center gap-4">
                 {logo && (
@@ -412,7 +434,7 @@ export default function Page() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Date d'échéance
+                  Date d&apos;échéance
                 </label>
                 <input
                   type="date"
@@ -492,6 +514,7 @@ export default function Page() {
 
               <button
                 type="button"
+
                 onClick={addItem}
                 className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-800"
               >
@@ -499,7 +522,6 @@ export default function Page() {
               </button>
             </div>
 
-            {/* Section Remise et TVA */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -572,7 +594,7 @@ export default function Page() {
                   onClick={clearHistory}
                   className="text-xs text-red-500 hover:underline"
                 >
-                  Effacer l'historique
+                  Effacer l&apos;historique
                 </button>
               </div>
             </div>
@@ -657,7 +679,36 @@ export default function Page() {
             </div>
           </div>
         )}
+
+        {/* MODALE DE BLOCAGE SI EXPIRÉ */}
+        {!canAccess && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+            <div className="bg-white p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Votre essai gratuit est terminé</h2>
+              <p className="text-gray-600 mb-6 text-sm">
+                Pour continuer à générer des factures et gérer votre activité sans aucune limite, activez votre abonnement mensuel dès maintenant.
+              </p>
+              
+              <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl mb-6">
+                <span className="text-3xl font-extrabold text-blue-600">2 000 FCFA</span>
+                <span className="text-gray-500 text-sm"> / mois</span>
+              </div>
+
+              <button 
+                onClick={() => alert("Redirection vers le paiement Wave / Orange Money...")}
+                className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-md"
+              >
+                Payer via Wave / Orange Money
+              </button>
+              
+              <p className="text-xs text-gray-400 mt-4">
+                Activation automatique après validation du paiement.
+              </p>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
-  );
+  )
 }
