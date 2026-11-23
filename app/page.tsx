@@ -45,8 +45,14 @@ export default function Page() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Tous");
 
+  const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setTrialEndsAt(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000));
+  }, []);
+
   const userSubscription = {
-    trialEndsAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+    trialEndsAt: trialEndsAt ?? new Date(2099, 0, 1),
     subscriptionStatus: "trial" as const,
   };
 
@@ -187,7 +193,7 @@ export default function Page() {
 
   const exportToCSV = () => {
     if (history.length === 0) return;
-    
+
     let csvContent = "data:text/csv;charset=utf-8,ID;Date;Client;Statut;Total (FCFA)\n";
     history.forEach((inv) => {
       csvContent += `${inv.id};${inv.date};${inv.clientName};${inv.status};${inv.total}\n`;
@@ -296,7 +302,7 @@ export default function Page() {
     const matchesSearch =
       inv.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inv.id.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus =
       statusFilter === "Tous" || inv.status === statusFilter;
 
@@ -314,14 +320,14 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
-        
+
         {/* BANNIÈRE D'ESSAI GRATUIT */}
         {isTrial && (
           <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <p className="text-sm">
               ⚠️ Période d&apos;essai gratuit en cours : Il vous reste <strong>{daysLeft} jours</strong> pour tester Facture Express.
             </p>
-            <button 
+            <button
               onClick={() => alert("Redirection vers la page de mise à niveau Pro...")}
               className="bg-amber-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-amber-700 transition"
             >
@@ -333,7 +339,7 @@ export default function Page() {
         {/* Tableau de bord financier */}
         {history.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div 
+            <div
               onClick={() => setStatusFilter("Tous")}
               className={`bg-white p-4 rounded-md shadow-sm border-l-4 border-blue-500 cursor-pointer hover:bg-blue-50 transition ${statusFilter === "Tous" ? "ring-2 ring-blue-400" : ""}`}
             >
@@ -341,7 +347,7 @@ export default function Page() {
               <p className="text-lg font-bold text-gray-800">{formatAmount(totalPaid)} FCFA</p>
             </div>
 
-            <div 
+            <div
               onClick={() => setStatusFilter("Payée")}
               className={`bg-white p-4 rounded-md shadow-sm border-l-4 border-green-500 cursor-pointer hover:bg-green-50 transition ${statusFilter === "Payée" ? "ring-2 ring-green-400" : ""}`}
             >
@@ -349,7 +355,7 @@ export default function Page() {
               <p className="text-lg font-bold text-green-600">{formatAmount(totalPaid)} FCFA</p>
             </div>
 
-            <div 
+            <div
               onClick={() => setStatusFilter("En attente")}
               className={`bg-white p-4 rounded-md shadow-sm border-l-4 border-yellow-500 cursor-pointer hover:bg-yellow-50 transition ${statusFilter === "En attente" ? "ring-2 ring-yellow-400" : ""}`}
             >
@@ -514,7 +520,6 @@ export default function Page() {
 
               <button
                 type="button"
-
                 onClick={addItem}
                 className="mt-2 text-sm font-medium text-blue-600 hover:text-blue-800"
               >
@@ -651,7 +656,7 @@ export default function Page() {
                         {inv.date} - {formatAmount(inv.total)} FCFA
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
@@ -688,19 +693,19 @@ export default function Page() {
               <p className="text-gray-600 mb-6 text-sm">
                 Pour continuer à générer des factures et gérer votre activité sans aucune limite, activez votre abonnement mensuel dès maintenant.
               </p>
-              
+
               <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl mb-6">
                 <span className="text-3xl font-extrabold text-blue-600">2 000 FCFA</span>
                 <span className="text-gray-500 text-sm"> / mois</span>
               </div>
 
-              <button 
+              <button
                 onClick={() => alert("Redirection vers le paiement Wave / Orange Money...")}
                 className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition shadow-md"
               >
                 Payer via Wave / Orange Money
               </button>
-              
+
               <p className="text-xs text-gray-400 mt-4">
                 Activation automatique après validation du paiement.
               </p>
