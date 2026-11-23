@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { checkUserAccess } from "@/lib/subscription";
+import {
+  checkUserAccess,
+  getOrCreateSubscription,
+  type UserSubscription,
+} from "@/lib/subscription";
 
 interface Item {
   description: string;
@@ -44,22 +48,21 @@ export default function Page() {
   const [history, setHistory] = useState<SavedInvoice[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Tous");
-const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
+
+  const [subscription, setSubscription] = useState<UserSubscription>({
+    trialEndsAt: new Date(2099, 0, 1).toISOString(),
+    subscriptionStatus: "trial",
+  });
   const [nowDate, setNowDate] = useState<Date | null>(null);
 
   useEffect(() => {
     const current = new Date();
     setNowDate(current);
-    setTrialEndsAt(new Date(current.getTime() + 5 * 24 * 60 * 60 * 1000));
+    setSubscription(getOrCreateSubscription(current));
   }, []);
 
-  const userSubscription = {
-    trialEndsAt: trialEndsAt ?? new Date(2099, 0, 1),
-    subscriptionStatus: "trial" as const,
-  };
-
   const { canAccess, isTrial, daysLeft } = checkUserAccess(
-    userSubscription,
+    subscription,
     nowDate ?? undefined
   );
 
@@ -325,8 +328,6 @@ const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
-
-        {/* BANNIÈRE D'ESSAI GRATUIT */}
         {isTrial && (
           <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <p className="text-sm">
@@ -341,7 +342,6 @@ const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
           </div>
         )}
 
-        {/* Tableau de bord financier */}
         {history.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div
@@ -690,7 +690,6 @@ const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
           </div>
         )}
 
-        {/* MODALE DE BLOCAGE SI EXPIRÉ */}
         {!canAccess && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
             <div className="bg-white p-8 rounded-2xl max-w-md w-full text-center shadow-2xl">
@@ -717,8 +716,7 @@ const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
             </div>
           </div>
         )}
-
       </div>
     </div>
-  )
+  );
 }
